@@ -1,0 +1,12 @@
+modLoader="javafml"
+loaderVersion="[40,)"
+license="GNU Lesser General Public License v2.1 (LGPLv2.1)"
+
+[[mods]]
+modId="autobotany"
+version="${file.jarVersion}"
+displayName="AutoBotany"
+# displayURL=""
+logoFile=""
+authors="Tictim"
+description=''''''
