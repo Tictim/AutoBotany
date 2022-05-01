@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +26,10 @@ public class DataRegistry<T extends DataRegistry.Entry>{
 	}
 	public T defaultEntry(){
 		return defaultEntry;
+	}
+
+	public Collection<T> entries(){
+		return view.values();
 	}
 
 	public T register(T newEntry){
@@ -57,6 +62,5 @@ public class DataRegistry<T extends DataRegistry.Entry>{
 
 	public interface Entry{
 		ResourceLocation name();
-		boolean hidden();
 	}
 }

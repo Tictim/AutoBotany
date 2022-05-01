@@ -13,9 +13,9 @@ public class AllSubstances{
 			true
 	));
 
-	private static Substance uranium;
-	private static Substance plutonium;
-	private static Substance literal_shit;
+	public static Substance uranium;
+	public static Substance plutonium;
+	public static Substance literal_shit;
 
 	public static void register(){
 		uranium = SUBSTANCES.register(new Substance(

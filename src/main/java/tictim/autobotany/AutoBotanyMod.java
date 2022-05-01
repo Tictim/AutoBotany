@@ -1,9 +1,11 @@
 package tictim.autobotany;
 
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.data.DataGenerator;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.gui.OverlayRegistry;
 import net.minecraftforge.client.model.ForgeModelBakery;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
@@ -19,13 +21,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tictim.autobotany.capability.SolutionHandler;
 import tictim.autobotany.client.DebugOverlay;
+import tictim.autobotany.client.TrayRenderer;
 import tictim.autobotany.contents.ModBlockEntities;
 import tictim.autobotany.contents.ModBlocks;
 import tictim.autobotany.contents.ModItems;
 import tictim.autobotany.data.*;
 import tictim.autobotany.datagen.BlockModelGen;
+import tictim.autobotany.datagen.BlockStateGen;
 import tictim.autobotany.datagen.ItemModelGen;
 import tictim.autobotany.datagen.LootTableGen;
+
+import static net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS;
 
 @Mod(AutoBotanyMod.MODID)
 @Mod.EventBusSubscriber(modid = AutoBotanyMod.MODID, bus = Bus.MOD)
@@ -43,13 +49,16 @@ public class AutoBotanyMod{
 		AllSubstances.register();
 		// AllGenes.register();
 		AllSpecies.register();
-		// AllPathogens.register();
+		// AllEcosystems.register();
 		AllSoils.register();
 	}
 
 	@SubscribeEvent
 	public static void commonSetup(FMLCommonSetupEvent event){
-		LOGGER.info("SUSSY AMONG US 2022 FUNNY MEME MOD!!!11111111!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		event.enqueueWork(() -> {
+			for(Species species : AllSpecies.REGISTRY.entries())
+				species.seed().checkCache();
+		});
 	}
 
 	@SubscribeEvent
@@ -63,6 +72,7 @@ public class AutoBotanyMod{
 		if(event.includeClient()){
 			generator.addProvider(new BlockModelGen(generator, event.getExistingFileHelper()));
 			generator.addProvider(new ItemModelGen(generator, event.getExistingFileHelper()));
+			generator.addProvider(new BlockStateGen(generator, event.getExistingFileHelper()));
 		}
 		if(event.includeServer()){
 			generator.addProvider(new LootTableGen(generator));
@@ -73,6 +83,7 @@ public class AutoBotanyMod{
 	public static class Client{
 		@SubscribeEvent
 		public static void clientSetup(FMLClientSetupEvent event){
+			BlockEntityRenderers.register(ModBlockEntities.WOODEN_TRAY.get(), TrayRenderer::new);
 			event.enqueueWork(() -> {
 				OverlayRegistry.registerOverlayTop("AutoBotany Overlay", new DebugOverlay());
 			});
@@ -87,15 +98,19 @@ public class AutoBotanyMod{
 
 		@SubscribeEvent
 		public static void modelRegistry(ModelRegistryEvent event){
-			for(SoilShape soilShape : SoilShape.REGISTRY.map().values()){
+			for(SoilShape soilShape : SoilShape.REGISTRY.entries()){
 				ForgeModelBakery.addSpecialModel(soilShape.itemModel());
 			}
-			for(Species species : AllSpecies.REGISTRY.map().values()){
-				ForgeModelBakery.addSpecialModel(species.seedItemModel());
-				for(int i = 0; i<species.stages(); i++)
-					ForgeModelBakery.addSpecialModel(species.growingCropModel(i));
-				ForgeModelBakery.addSpecialModel(species.matureCropModel());
+			for(Species species : AllSpecies.REGISTRY.entries()){
+				species.visual().forEachModels(ForgeModelBakery::addSpecialModel);
 			}
+		}
+
+		@SubscribeEvent
+		public static void beforeTextureStitch(TextureStitchEvent.Pre event){
+			if(!event.getAtlas().location().equals(BLOCK_ATLAS)) return;
+			for(SoilShape soilShape : SoilShape.REGISTRY.entries())
+				event.addSprite(soilShape.soilTexture());
 		}
 	}
 }

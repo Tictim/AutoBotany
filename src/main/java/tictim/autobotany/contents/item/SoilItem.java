@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 public class SoilItem extends DataItem<Soil>{
 	public SoilItem(Properties properties){
-		super(properties, AllSoils.SOILS);
+		super(properties, AllSoils.SOILS, soil -> !soil.hidden());
 	}
 
 	@Override public void initializeClient(Consumer<IItemRenderProperties> consumer){

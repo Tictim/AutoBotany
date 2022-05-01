@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package tictim.autobotany.data.cropmodifier;
+package tictim.autobotany.gametest;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 

@@ -5,19 +5,18 @@ import net.minecraft.resources.ResourceLocation;
 import javax.annotation.Nullable;
 
 /**
- * Various pathogens present in {@link Soil soils}. May provide disease or {@link Substance additional nutrients}.
+ * Various things present in {@link Soil soils}, such as fungi, microbes, etc.
+ * May provide disease or {@link Substance additional nutrients}.
  */
-public record Pathogen(
+public record Ecosystem(
 		ResourceLocation name,
 		int tint,
 		SubstanceSet nutrients,
-		@Nullable Disease disease,
-		// Whether it's hidden in creative tabs or database
-		boolean hidden
+		@Nullable Disease disease
 ) implements DataRegistry.Entry{
 	@Override
 	public boolean equals(Object o){
-		return this==o||o instanceof Pathogen p&&name.equals(p.name);
+		return this==o||o instanceof Ecosystem p&&name.equals(p.name);
 	}
 	@Override
 	public int hashCode(){
@@ -29,7 +28,7 @@ public record Pathogen(
 	}
 
 	/**
-	 * Disease that specific pathogen apply. One pathogen can only cause one disease.
+	 * Disease that specific pathogen apply. One ecosystem can only cause one disease.
 	 */
 	public static record Disease (
 			// Immunity threshold - the disease will only affect crops with immunity stat lower than the threshold.

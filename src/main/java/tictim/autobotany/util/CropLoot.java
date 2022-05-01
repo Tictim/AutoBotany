@@ -22,6 +22,8 @@ public class CropLoot{
 	public static final LootContextParamSet PARAMS = LootContextParamSet.builder()
 			.required(RANK).optional(LootContextParams.ORIGIN).build();
 
+	public static final int SEED_GIVEBACK_TIME = 30; // 30 sec
+
 	public static LootContext createContext(ServerLevel level, int rank){
 		return createContext(level, rank, (Vec3)null);
 	}

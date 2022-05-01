@@ -3,8 +3,7 @@ package tictim.autobotany.data;
 import net.minecraft.resources.ResourceLocation;
 
 public record Gene(
-		ResourceLocation name,
-		boolean hidden
+		ResourceLocation name
 ) implements DataRegistry.Entry{
 	@Override
 	public boolean equals(Object o){

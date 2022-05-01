@@ -1,7 +1,6 @@
 package tictim.autobotany.datagen;
 
 import net.minecraft.data.DataGenerator;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
 import net.minecraftforge.client.model.generators.ModelFile;
@@ -17,8 +16,6 @@ public class BlockModelGen extends BlockStateProvider{
 		super(gen, MODID, exFileHelper);
 	}
 	@Override protected void registerStatesAndModels(){
-		simpleBlock(ModBlocks.WOODEN_TRAY.get(),
-				models().cubeAll(ModBlocks.WOODEN_TRAY.getId().getPath(), new ResourceLocation("block/oak_planks")));
 		simpleItemBlock(ModBlocks.WOODEN_TRAY.get());
 	}
 

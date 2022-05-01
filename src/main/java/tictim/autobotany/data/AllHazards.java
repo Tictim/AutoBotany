@@ -6,7 +6,6 @@ import static tictim.autobotany.AutoBotanyMod.MODID;
 
 public class AllHazards{
 	public static final DataRegistry<Hazard> HAZARDS = new DataRegistry<>(new Hazard(
-			new ResourceLocation(MODID, "default"),
-			true
+			new ResourceLocation(MODID, "default")
 	));
 }

@@ -14,6 +14,13 @@ public class SolutionContainer implements SolutionHandler{
 		this.substances = SubstanceSet.newCapped(substanceCapacity);
 	}
 
+	public int getTankCapacity(){
+		return capacity;
+	}
+	public int getSubstanceCapacity(){
+		return substances.cap();
+	}
+
 	@Override public int getTanks(){
 		return 1;
 	}
@@ -35,7 +42,7 @@ public class SolutionContainer implements SolutionHandler{
 
 		if(fluid.isEmpty()){
 			int accepted = Math.min(capacity, resource.getAmount());
-			SubstanceSet acceptedSubstance = substances.split((double)accepted/resource.getAmount());
+			SubstanceSet acceptedSubstance = substances.subset((double)accepted/resource.getAmount());
 			if(!this.substances.addAll(acceptedSubstance, true)) // TODO lol
 				return FluidAndSubstance.NONE;
 			if(action.execute()){
@@ -48,12 +55,14 @@ public class SolutionContainer implements SolutionHandler{
 
 		if(!fluid.isFluidEqual(resource)) return FluidAndSubstance.NONE;
 		int filled = Math.min(capacity-fluid.getAmount(), resource.getAmount());
-		SubstanceSet acceptedSubstance = substances.split((double)filled/resource.getAmount());
+		SubstanceSet acceptedSubstance = substances.subset((double)filled/resource.getAmount());
 		if(!this.substances.addAll(acceptedSubstance, true)) // TODO lol
 			return FluidAndSubstance.NONE;
-		fluid.grow(filled);
-		this.substances.addAll(acceptedSubstance, false);
-		if(filled>0) onContentsChanged();
+		if(action.execute()){
+			this.fluid.grow(filled);
+			this.substances.addAll(acceptedSubstance, false);
+			if(filled>0) onContentsChanged();
+		}
 		return new FluidAndSubstance(filled, acceptedSubstance);
 	}
 	@Override public FluidStackAndSubstance drainWithResources(FluidStack resource, FluidAction action){
@@ -68,7 +77,7 @@ public class SolutionContainer implements SolutionHandler{
 		if(drained==0) return FluidStackAndSubstance.NONE;
 
 		FluidStack stack = new FluidStack(fluid, drained);
-		SubstanceSet substances = this.substances.split((double)fluid.getAmount()/drained, action.execute());
+		SubstanceSet substances = this.substances.splitOrSubset((double)fluid.getAmount()/drained, action.execute());
 		if(action.execute()&&drained>0){
 			fluid.shrink(drained);
 			onContentsChanged();
@@ -77,6 +86,11 @@ public class SolutionContainer implements SolutionHandler{
 	}
 
 	protected void onContentsChanged(){}
+
+	public void clear(){
+		this.fluid = FluidStack.EMPTY;
+		this.substances.clear();
+	}
 
 	public CompoundTag write(){
 		CompoundTag tag = new CompoundTag();

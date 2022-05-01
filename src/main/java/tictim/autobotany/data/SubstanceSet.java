@@ -1,12 +1,14 @@
 package tictim.autobotany.data;
 
 import it.unimi.dsi.fastutil.objects.*;
+import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -34,6 +36,15 @@ public class SubstanceSet{
 	public static SubstanceSet immutableCopy(SubstanceSet set){
 		return new SubstanceSet(new Object2IntOpenHashMap<>(set.map));
 	}
+	public static SubstanceSet readFrom(CompoundTag tag){
+		Object2IntOpenHashMap<Substance> map = new Object2IntOpenHashMap<>();
+		readFromNbt(tag, map);
+		return new SubstanceSet(map);
+	}
+
+	public static Builder builder(){
+		return new Builder();
+	}
 
 	protected final Object2IntMap<Substance> map;
 	@Nullable protected Object2IntMap<Substance> view;
@@ -57,21 +68,34 @@ public class SubstanceSet{
 	public int getAmount(Substance substance){
 		return map.getInt(substance);
 	}
-	public ObjectSet<Object2IntMap.Entry<Substance>> entries(){
+	public Set<Substance> substances(){
+		return getMap().keySet();
+	}
+	public ObjectSet<Entry<Substance>> entries(){
 		return getMap().object2IntEntrySet();
 	}
 	public boolean has(Substance substance){
 		return map.containsKey(substance);
 	}
 
+	public long getTotalLong(){
+		long total = 0;
+		for(Entry<Substance> e : map.object2IntEntrySet()){
+			if(Long.MAX_VALUE-total-e.getIntValue()<0) // overflow
+				return Long.MAX_VALUE;
+			total += e.getIntValue();
+		}
+		return total;
+	}
+
 	/**
-	 * @return SubstanceSet containing {@code percentage} amount of substances.
+	 * @return SubstanceSet containing {@code percentage}% amount of substances.
 	 */
-	public SubstanceSet split(double percentage){
+	public SubstanceSet subset(double percentage){
 		if(percentage==0) return empty();
 		if(percentage==1) return this;
 		SubstanceSet.Mutable mutable = newMutable();
-		for(Object2IntMap.Entry<Substance> e : map.object2IntEntrySet()){
+		for(Entry<Substance> e : map.object2IntEntrySet()){
 			int split = (int)(e.getIntValue()*percentage);
 			if(split<=0) continue;
 			mutable.put(e.getKey(), split);
@@ -79,13 +103,8 @@ public class SubstanceSet{
 		return mutable;
 	}
 
-	public CompoundTag write(CompoundTag tag){
-		writeToNbt(tag, this.map);
-		return tag;
-	}
-
-	private static void writeToNbt(CompoundTag tag, Object2IntMap<Substance> map){
-		for(Object2IntMap.Entry<Substance> e : map.object2IntEntrySet())
+	public void write(CompoundTag tag){
+		for(Entry<Substance> e : this.map.object2IntEntrySet())
 			tag.putInt(e.getKey().name().toString(), e.getIntValue());
 	}
 
@@ -97,7 +116,8 @@ public class SubstanceSet{
 			if(res==null) continue;
 			Substance substance = AllSubstances.SUBSTANCES.getOrNull(res);
 			if(substance==null) continue;
-			map.put(substance, tag.getInt(key));
+			int i = tag.getInt(key);
+			if(i>0) map.put(substance, i);
 		}
 	}
 
@@ -147,12 +167,12 @@ public class SubstanceSet{
 		}
 
 		public boolean addAll(SubstanceSet substance, boolean simulate){
-			for(Object2IntMap.Entry<Substance> e : substance.entries()){
+			for(Entry<Substance> e : substance.entries()){
 				Substance s = e.getKey();
 				if(add(s, e.getIntValue(), true)!=e.getIntValue()) return false;
 			}
 			if(!simulate){
-				for(Object2IntMap.Entry<Substance> e : substance.entries())
+				for(Entry<Substance> e : substance.entries())
 					add(e.getKey(), e.getIntValue(), true);
 			}
 			return true;
@@ -172,12 +192,12 @@ public class SubstanceSet{
 		}
 
 		public boolean consumeAll(SubstanceSet substance, boolean simulate){
-			for(Object2IntMap.Entry<Substance> e : substance.entries()){
+			for(Entry<Substance> e : substance.entries()){
 				Substance s = e.getKey();
 				if(consume(s, e.getIntValue(), true)!=e.getIntValue()) return false;
 			}
 			if(!simulate){
-				for(Object2IntMap.Entry<Substance> e : substance.entries())
+				for(Entry<Substance> e : substance.entries())
 					consume(e.getKey(), e.getIntValue(), true);
 			}
 			return true;
@@ -190,7 +210,7 @@ public class SubstanceSet{
 		/**
 		 * @return SubstanceSet containing {@code percentage} amount of substances.
 		 */
-		public SubstanceSet splitAndConsume(double percentage){
+		public SubstanceSet split(double percentage){
 			if(percentage==0) return empty();
 			if(percentage==1){
 				SubstanceSet copy = immutableCopy(this);
@@ -198,8 +218,8 @@ public class SubstanceSet{
 				return copy;
 			}
 			SubstanceSet.Mutable mutable = newMutable();
-			for(ObjectIterator<Object2IntMap.Entry<Substance>> it = map.object2IntEntrySet().iterator(); it.hasNext(); ){
-				Object2IntMap.Entry<Substance> e = it.next();
+			for(ObjectIterator<Entry<Substance>> it = map.object2IntEntrySet().iterator(); it.hasNext(); ){
+				Entry<Substance> e = it.next();
 				int split = (int)(e.getIntValue()*percentage);
 				if(split<=0) continue;
 				mutable.put(e.getKey(), split);
@@ -210,12 +230,28 @@ public class SubstanceSet{
 			return mutable;
 		}
 
-		public SubstanceSet split(double percentage, boolean consume){
-			return consume ? splitAndConsume(percentage) : split(percentage);
+		public SubstanceSet splitOrSubset(double percentage, boolean consume){
+			return consume ? split(percentage) : subset(percentage);
 		}
 
 		public void read(CompoundTag tag){
 			SubstanceSet.readFromNbt(tag, map);
+		}
+	}
+
+	public static final class Builder{
+		private final SubstanceSet.Mutable m = newMutable();
+
+		public Builder with(Substance substance, int amount){
+			m.put(substance, amount);
+			return this;
+		}
+
+		public SubstanceSet build(){
+			return m;
+		}
+		public SubstanceSet.Mutable buildMutable(){
+			return m;
 		}
 	}
 }

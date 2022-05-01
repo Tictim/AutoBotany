@@ -1,11 +1,12 @@
 package tictim.autobotany.client;
 
+import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.block.model.ItemTransforms.TransformType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.resources.ResourceLocation;
@@ -38,10 +39,13 @@ public class DataItemRenderer<T extends DataRegistry.Entry> extends BlockEntityW
 
 	@Override public void onResourceManagerReload(ResourceManager pResourceManager){}
 
-	@Override public void renderByItem(ItemStack stack, ItemTransforms.TransformType transformType, PoseStack pose, MultiBufferSource buffer, int packedLight, int packedOverlay){
+	@Override public void renderByItem(ItemStack stack, TransformType transformType, PoseStack pose, MultiBufferSource buffer, int packedLight, int packedOverlay){
 		BakedModel model = getModel(stack);
 		if(model.isCustomRenderer()) return; // nice infinite loop bro
 		pose.translate(.5, .5, .5);
+		boolean blockLight = model.usesBlockLight();
+		if(blockLight) Lighting.setupFor3DItems(); // TODO fuck
 		Minecraft.getInstance().getItemRenderer().render(stack, transformType, false, pose, buffer, packedLight, packedOverlay, model);
+		if(blockLight) Lighting.setupForFlatItems();
 	}
 }

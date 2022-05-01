@@ -24,13 +24,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class DataItem<T extends DataRegistry.Entry> extends Item{
 	private final DataRegistry<T> registry;
+	@Nullable private final Predicate<T> filter;
 
 	public DataItem(Properties properties, DataRegistry<T> registry){
+		this(properties, registry, null);
+	}
+	public DataItem(Properties properties, DataRegistry<T> registry, @Nullable Predicate<T> filter){
 		super(properties);
 		this.registry = registry;
+		this.filter = filter;
 	}
 
 	public ItemStack createStack(T t){
@@ -56,7 +62,7 @@ public class DataItem<T extends DataRegistry.Entry> extends Item{
 	@Override public void fillItemCategory(CreativeModeTab category, NonNullList<ItemStack> items){
 		if(this.allowdedIn(category)){
 			for(T t : registry.map().values()){
-				if(t.hidden()) continue;
+				if(filter!=null&&!filter.test(t)) continue;
 				items.add(createStack(t));
 			}
 		}
