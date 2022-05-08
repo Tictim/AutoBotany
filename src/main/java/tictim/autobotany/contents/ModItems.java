@@ -34,7 +34,7 @@ public class ModItems{
 				Item seedItem = species.seed().get();
 				if(seedItem==null) continue;
 				ItemStack s = new ItemStack(seedItem);
-				SeedProperty.create().save(s);
+				SeedProperty.create(species).save(s);
 				items.add(s);
 			}
 

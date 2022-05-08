@@ -4,27 +4,33 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.storage.loot.LootTable;
-import tictim.autobotany.AutoBotanyMod;
+import net.minecraft.world.level.storage.loot.entries.LootPoolSingletonContainer;
 import tictim.autobotany.contents.ModItems;
 import tictim.autobotany.crop.condition.CropCondition;
 import tictim.autobotany.crop.condition.IrrigationCondition;
 import tictim.autobotany.crop.condition.NutrientCondition;
 import tictim.autobotany.data.Species.Tier;
+import tictim.autobotany.loot.SeedFunction;
 import tictim.autobotany.util.FluidMatch;
 import tictim.autobotany.util.ObjRef;
+import tictim.autobotany.util.Rank;
 
-import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Supplier;
 
 import static net.minecraft.world.level.storage.loot.LootPool.lootPool;
 import static net.minecraft.world.level.storage.loot.LootTable.lootTable;
 import static net.minecraft.world.level.storage.loot.entries.LootItem.lootTableItem;
+import static net.minecraft.world.level.storage.loot.functions.SetItemCountFunction.setCount;
 import static net.minecraft.world.level.storage.loot.providers.number.ConstantValue.exactly;
+import static net.minecraft.world.level.storage.loot.providers.number.UniformGenerator.between;
 import static tictim.autobotany.AutoBotanyMod.MODID;
 import static tictim.autobotany.data.SpeciesVisual.*;
+import static tictim.autobotany.loot.RankCondition.exactRank;
+import static tictim.autobotany.loot.RankCondition.minRank;
+import static tictim.autobotany.loot.YieldFunction.cropYieldSq;
 
 public class AllSpecies{
 	public static final DataRegistry<Species> REGISTRY = new DataRegistry<>(new Species(
@@ -35,7 +41,7 @@ public class AllSpecies{
 			0,
 			0,
 			List.of(),
-			LootTable.EMPTY,
+			() -> LootTable.EMPTY,
 			ObjRef.none(),
 			defaultVisual(MODID, "default", 0)
 	));
@@ -56,11 +62,11 @@ public class AllSpecies{
 				List.of(
 						new NutrientCondition(AllSubstances.uranium, 1, 1)
 				),
-				lootTable().withPool(
-						lootPool()
-								.setRolls(exactly(1))
-								.add(lootTableItem(Items.RABBIT_HIDE))
-				),
+				() -> lootTable()
+						.withPool(lootPool().add(lootTableItem(Items.RABBIT_HIDE).when(minRank(Rank.D)).apply(cropYieldSq(Rank.D))))
+						.withPool(lootPool().add(lootTableItem(Items.LEATHER).when(minRank(Rank.A)).apply(cropYieldSq(Rank.A))))
+						.withPool(lootPool().add(seed(ModItems.A::get).apply(setCount(exactly(3)))))
+						.build(),
 				ObjRef.of(ModItems.A),
 				defaultVisual(MODID, "a", 1));
 		b = register("b",
@@ -72,11 +78,16 @@ public class AllSpecies{
 				List.of(
 						new NutrientCondition(AllSubstances.plutonium, 1, 1)
 				),
-				lootTable().withPool(
-						lootPool()
-								.setRolls(exactly(1))
-								.add(lootTableItem(Items.BLUE_SHULKER_BOX))
-				),
+				() -> lootTable()
+						.withPool(lootPool().add(lootTableItem(Items.RED_SHULKER_BOX).when(exactRank(Rank.F))))
+						.withPool(lootPool().add(lootTableItem(Items.ORANGE_SHULKER_BOX).when(exactRank(Rank.D))))
+						.withPool(lootPool().add(lootTableItem(Items.YELLOW_SHULKER_BOX).when(exactRank(Rank.C))))
+						.withPool(lootPool().add(lootTableItem(Items.GREEN_SHULKER_BOX).when(exactRank(Rank.B))))
+						.withPool(lootPool().add(lootTableItem(Items.BLUE_SHULKER_BOX).when(exactRank(Rank.A))))
+						.withPool(lootPool().add(lootTableItem(Items.CYAN_SHULKER_BOX).when(exactRank(Rank.S))))
+						.withPool(lootPool().add(lootTableItem(Items.PURPLE_SHULKER_BOX).when(minRank(Rank.S+1)).apply(cropYieldSq(Rank.S+1))))
+						.withPool(lootPool().add(seed(ModItems.B::get).apply(setCount(exactly(1)))))
+						.build(),
 				ObjRef.of(ModItems.B),
 				defaultVisual(MODID, "b", 1));
 		c = register("c",
@@ -88,11 +99,11 @@ public class AllSpecies{
 				List.of(
 						new NutrientCondition(AllSubstances.literal_shit, 1, 1)
 				),
-				lootTable().withPool(
-						lootPool()
-								.setRolls(exactly(1))
-								.add(lootTableItem(Items.PIG_SPAWN_EGG))
-				),
+				() -> lootTable()
+						.withPool(lootPool().add(lootTableItem(Items.PIG_SPAWN_EGG).apply(setCount(exactly(3))).when(minRank(Rank.D)).apply(cropYieldSq(Rank.D))))
+						.withPool(lootPool().add(lootTableItem(Items.COW_SPAWN_EGG).apply(setCount(exactly(2))).when(exactRank(Rank.C))))
+						.withPool(lootPool().add(seed(ModItems.C::get).apply(setCount(exactly(2)))))
+						.build(),
 				ObjRef.of(ModItems.C),
 				defaultVisual(MODID, "c", 1));
 
@@ -103,13 +114,12 @@ public class AllSpecies{
 				1,
 				15,
 				List.of(
-						new IrrigationCondition(new FluidMatch.TagMatch(FluidTags.WATER), 10, 10)
+						new IrrigationCondition(new FluidMatch.TagMatch(FluidTags.WATER), 3, 10)
 				),
-				lootTable().withPool(
-						lootPool()
-								.setRolls(exactly(1))
-								.add(lootTableItem(Items.WHEAT))
-				),
+				() -> lootTable()
+						.withPool(lootPool().add(lootTableItem(Items.WHEAT).when(minRank(Rank.D)).apply(cropYieldSq(Rank.D))))
+						.withPool(lootPool().add(seed(Items.WHEAT_SEEDS).apply(setCount(between(0, 2)))))
+						.build(),
 				ObjRef.of(Items.WHEAT_SEEDS),
 				visual().addStage(model("block/wheat_stage0").wilt(0xFF0000))
 						.addStage(model("block/wheat_stage1").wilt(0xFF0000))
@@ -123,6 +133,10 @@ public class AllSpecies{
 		);
 	}
 
+	private static LootPoolSingletonContainer.Builder<?> seed(ItemLike itemLike){
+		return lootTableItem(itemLike).apply(SeedFunction::new);
+	}
+
 	private static Species register(String name,
 	                                Tier tier,
 	                                int baseGrowthTime,
@@ -130,7 +144,7 @@ public class AllSpecies{
 	                                int geneComplexity,
 	                                int baseInfluence,
 	                                List<CropCondition<?>> conditions,
-	                                LootTable.Builder yields,
+	                                Supplier<LootTable> yields,
 	                                ObjRef<Item> seed,
 	                                SpeciesVisual visual){
 		return REGISTRY.register(create(name, tier, baseGrowthTime, targetScore, geneComplexity, baseInfluence, conditions, yields, seed, visual));
@@ -143,7 +157,7 @@ public class AllSpecies{
 	                              int geneComplexity,
 	                              int baseInfluence,
 	                              List<CropCondition<?>> conditions,
-	                              LootTable.Builder yields,
+	                              Supplier<LootTable> yields,
 	                              ObjRef<Item> seed,
 	                              SpeciesVisual visual){
 		return new Species(new ResourceLocation(MODID, name),
@@ -153,30 +167,8 @@ public class AllSpecies{
 				geneComplexity,
 				baseInfluence,
 				conditions,
-				yields.build(),
+				yields,
 				seed,
 				visual);
-	}
-
-	@Nullable private static Map<ResourceLocation, Species> seedToItemMap;
-
-	@Nullable public static Species fromSeedItem(Item item){
-		if(seedToItemMap==null){
-			seedToItemMap = new HashMap<>();
-			for(Species species : REGISTRY.entries()){
-				Item seed = species.seed().get();
-				if(seed==null) continue;
-				ResourceLocation seedName = seed.getRegistryName();
-				if(seedName==null) continue;
-				if(seedToItemMap.putIfAbsent(seedName, species)!=null)
-					AutoBotanyMod.LOGGER.warn("Item {} is registered as seed for both {} and {}",
-							seedName, seedToItemMap.get(seedName).name(), species.name());
-			}
-		}
-		ResourceLocation seedName = item.getRegistryName();
-		return seedName!=null ? seedToItemMap.get(seedName) : null;
-	}
-	public static void clearSeedToItemCache(){
-		seedToItemMap = null;
 	}
 }

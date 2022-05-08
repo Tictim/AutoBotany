@@ -3,7 +3,7 @@ package tictim.autobotany.crop;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import tictim.autobotany.data.Species;
-import tictim.autobotany.util.CropLoot;
+import tictim.autobotany.loot.Loot;
 import tictim.autobotany.util.Rank;
 
 import java.util.ArrayList;
@@ -50,25 +50,6 @@ public final class CropResult{
 		return this.rank;
 	}
 
-	public String getRankString(){
-		int rank = rank();
-		if(rank<0) return "?";
-		else return switch(rank){
-			case Rank.F -> "F";
-			case Rank.D -> "D";
-			case Rank.C -> "C";
-			case Rank.B -> "B";
-			case Rank.A -> "A";
-			case Rank.S -> "S";
-			default -> {
-				int chars = rank-Rank.S+1;
-				StringBuilder stb = new StringBuilder(chars);
-				for(; chars>0; chars--) stb.append('S');
-				yield stb.toString();
-			}
-		};
-	}
-
 	public static final class Builder{
 		private final Species species;
 		private final long score;
@@ -82,7 +63,7 @@ public final class CropResult{
 		}
 
 		public Builder addGeneratedYields(ServerLevel level){
-			this.yields.addAll(CropLoot.generateYield(species, level, Rank.fromScore(score, species.baseGrowthTime())));
+			this.yields.addAll(Loot.generateYield(species, level, Rank.fromScore(score, species.baseGrowthTime())));
 			return this;
 		}
 		public Builder addYields(List<ItemStack> yields){

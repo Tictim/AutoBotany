@@ -1,5 +1,7 @@
 package tictim.autobotany.util;
 
+import com.google.gson.JsonParseException;
+
 /**
  * Rank indicating quality of crops.<br>
  * Note that this is not complete list of possible ranks. Some crops have special conditions that, when satisfied, would give an '+' tier.
@@ -87,5 +89,48 @@ public interface Rank{
 			case S -> baseScore*4;
 			default -> baseScore*4*(rank-S+1);
 		};
+	}
+
+	static String toString(int rank){
+		return switch(rank){
+			case F -> "F";
+			case D -> "D";
+			case C -> "C";
+			case B -> "B";
+			case A -> "A";
+			case S -> "S";
+			default -> rank<0 ? "" : "S".repeat(rank-S+1);
+		};
+	}
+
+	static int fromString(String s){
+		return switch(s.length()){
+			case 0 -> -1;
+			case 1 -> switch(s.charAt(0)){
+				case 'F', 'f' -> F;
+				case 'D', 'd' -> D;
+				case 'C', 'c' -> C;
+				case 'B', 'b' -> B;
+				case 'A', 'a' -> A;
+				case 'S', 's' -> S;
+				default -> -1;
+			};
+			default -> {
+				for(int i = 0; i<s.length(); i++){
+					char c = s.charAt(i);
+					if(c!='S'&&c!='s') yield -1;
+				}
+				yield S-1+s.length();
+			}
+		};
+	}
+
+	/**
+	 * @throws JsonParseException
+	 */
+	static int fromJsonString(String s){
+		int rank = Rank.fromString(s);
+		if(rank<0) throw new JsonParseException("Invalid rank: '"+s+'\'');
+		return rank;
 	}
 }

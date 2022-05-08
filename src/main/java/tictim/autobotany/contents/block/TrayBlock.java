@@ -6,7 +6,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -22,11 +21,10 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.fluids.FluidUtil;
 import tictim.autobotany.contents.ModItems;
 import tictim.autobotany.contents.blockentity.TrayBlockEntity;
-import tictim.autobotany.crop.Crop;
 import tictim.autobotany.crop.Tray;
-import tictim.autobotany.data.AllSpecies;
 import tictim.autobotany.data.Soil;
 import tictim.autobotany.data.Species;
+import tictim.autobotany.util.SeedProperty;
 
 import javax.annotation.Nullable;
 
@@ -37,6 +35,7 @@ public abstract class TrayBlock extends BaseEntityBlock{
 
 	public TrayBlock(Properties p){
 		super(p);
+		registerDefaultState(getStateDefinition().any().setValue(SOILED, false));
 	}
 
 	@Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> b){
@@ -47,7 +46,6 @@ public abstract class TrayBlock extends BaseEntityBlock{
 		return defaultBlockState().setValue(HORIZONTAL_FACING, context.getHorizontalDirection().getOpposite());
 	}
 
-	// TODO Make it UI-based or sth
 	@SuppressWarnings("deprecation")
 	@Override
 	public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit){
@@ -79,18 +77,10 @@ public abstract class TrayBlock extends BaseEntityBlock{
 				}
 				return;
 			}
-		}else if(stack.getItem()==Items.SHEARS){ // TODO i'm not sure about this
-			if(tray.hasCrop()){
-				if(level instanceof ServerLevel sl){
-					tray.harvestCrop(sl, pos);
-					stack.hurtAndBreak(1, player, p -> p.broadcastBreakEvent(hand));
-				}
-				return;
-			}
 		}else{
 			if(FluidUtil.interactWithFluidHandler(player, hand, tray.getSolutionContainer())) return;
 
-			Species species = AllSpecies.fromSeedItem(stack.getItem());
+			Species species = SeedProperty.speciesFromSeedItem(stack.getItem());
 			if(species!=null){
 				if(!tray.hasCrop()){
 					stack.shrink(1);
@@ -99,10 +89,7 @@ public abstract class TrayBlock extends BaseEntityBlock{
 				}
 			}
 		}
-		// TODO gui
-		Crop crop = tray.crop();
-		if(crop!=null&&crop.isFullyGrown()&&level instanceof ServerLevel sl)
-			tray.harvestCrop(sl, pos);
+		player.openMenu(trayBlockEntity);
 	}
 
 	@SuppressWarnings("deprecation")

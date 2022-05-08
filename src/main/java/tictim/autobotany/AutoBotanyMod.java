@@ -1,5 +1,6 @@
 package tictim.autobotany;
 
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.data.DataGenerator;
 import net.minecraftforge.api.distmarker.Dist;
@@ -22,14 +23,18 @@ import org.apache.logging.log4j.Logger;
 import tictim.autobotany.capability.SolutionHandler;
 import tictim.autobotany.client.DebugOverlay;
 import tictim.autobotany.client.TrayRenderer;
+import tictim.autobotany.client.screen.TrayScreen;
 import tictim.autobotany.contents.ModBlockEntities;
 import tictim.autobotany.contents.ModBlocks;
 import tictim.autobotany.contents.ModItems;
+import tictim.autobotany.contents.ModMenus;
 import tictim.autobotany.data.*;
 import tictim.autobotany.datagen.BlockModelGen;
 import tictim.autobotany.datagen.BlockStateGen;
 import tictim.autobotany.datagen.ItemModelGen;
 import tictim.autobotany.datagen.LootTableGen;
+import tictim.autobotany.loot.Loot;
+import tictim.autobotany.network.ModNet;
 
 import static net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS;
 
@@ -44,6 +49,9 @@ public class AutoBotanyMod{
 		ModBlocks.REGISTER.register(eventBus);
 		ModItems.REGISTER.register(eventBus);
 		ModBlockEntities.REGISTER.register(eventBus);
+		ModMenus.REGISTER.register(eventBus);
+
+		ModNet.register();
 
 		// AllHazards.register();
 		AllSubstances.register();
@@ -56,6 +64,7 @@ public class AutoBotanyMod{
 	@SubscribeEvent
 	public static void commonSetup(FMLCommonSetupEvent event){
 		event.enqueueWork(() -> {
+			Loot.register();
 			for(Species species : AllSpecies.REGISTRY.entries())
 				species.seed().checkCache();
 		});
@@ -86,6 +95,7 @@ public class AutoBotanyMod{
 			BlockEntityRenderers.register(ModBlockEntities.WOODEN_TRAY.get(), TrayRenderer::new);
 			event.enqueueWork(() -> {
 				OverlayRegistry.registerOverlayTop("AutoBotany Overlay", new DebugOverlay());
+				MenuScreens.register(ModMenus.TRAY.get(), TrayScreen::new);
 			});
 		}
 

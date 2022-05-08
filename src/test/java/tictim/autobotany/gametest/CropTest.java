@@ -92,7 +92,7 @@ public class CropTest{
 				1,
 				15,
 				List.of(conditions),
-				LootTable.EMPTY,
+				() -> LootTable.EMPTY,
 				ObjRef.none(),
 				SpeciesVisual.defaultVisual(MODID, "test_only", 0)
 		);

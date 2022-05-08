@@ -11,7 +11,7 @@ import tictim.autobotany.crop.condition.CropConditions;
 import tictim.autobotany.crop.factor.CropGrowthFactor;
 import tictim.autobotany.data.AllSpecies;
 import tictim.autobotany.data.Species;
-import tictim.autobotany.util.CropLoot;
+import tictim.autobotany.loot.Loot;
 import tictim.autobotany.util.CropScoreCalculation;
 import tictim.autobotany.util.Rank;
 import tictim.autobotany.util.SeedProperty;
@@ -85,7 +85,7 @@ public final class Crop{
 
 	public CropResult createResult(ServerLevel level){
 		long score = totalScore();
-		return growth<=CropLoot.SEED_GIVEBACK_TIME&&
+		return growth<=Loot.SEED_GIVEBACK_TIME&&
 				Rank.fromScore(score, species.targetScore())==Rank.F ?
 				CropResult.builder(species, score)
 						.addYields(createSeed(1))
@@ -101,7 +101,7 @@ public final class Crop{
 		Item seed = species.seed().get();
 		if(seed==null) return List.of();
 		ItemStack stack = new ItemStack(seed, count);
-		SeedProperty.create().save(stack);
+		SeedProperty.create(species).save(stack);
 		return List.of(stack); // TODO
 	}
 
